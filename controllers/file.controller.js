@@ -145,7 +145,7 @@ const showVersions = async (req, res) => {
         }
 
         const command = new ListObjectVersionsCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
+            Bucket: process.env.BUCKET_NAME,
             Prefix: file.s3Key
         });
 
