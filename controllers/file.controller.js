@@ -79,7 +79,7 @@ const deleteFile = async (req, res) => {
         const command = new DeleteObjectCommand({
             Bucket: process.env.BUCKET_NAME,
             Key: file.s3Key,
-            VersionId:file.versionId
+            VersionId: file.versionId
         });
 
         await s3.send(command);
@@ -113,11 +113,12 @@ const downloadFile = async (req, res) => {
 
         const command = new GetObjectCommand({
             Bucket: process.env.BUCKET_NAME,
-            Key: file.s3Key
+            Key: file.s3Key,
+            ResponseContentDisposition: `attachment; filename="${file.fileName}"`
         });
 
         const signedUrl = await getSignedUrl(s3, command, {
-            expiresIn: 60 // URL valid for 60 seconds
+            expiresIn: 60
         });
 
         return res.status(200).json({
@@ -134,7 +135,7 @@ const showVersions = async (req, res) => {
     try {
         const { fileId } = req.params;
         const file = await File.findById(fileId);
-        
+
         if (!file) {
             return res.status(404).json({ message: "File not found" });
         }
@@ -142,7 +143,7 @@ const showVersions = async (req, res) => {
         if (file.uploadedBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Unauthorized" });
         }
-        
+
         const command = new ListObjectVersionsCommand({
             Bucket: process.env.BUCKET_NAME,
             Prefix: file.s3Key
