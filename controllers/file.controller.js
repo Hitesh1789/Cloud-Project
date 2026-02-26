@@ -134,43 +134,41 @@ const downloadFile = async (req, res) => {
     }
 };
 
-const { ListObjectVersionsCommand } = require("@aws-sdk/client-s3");
-
 const showVersions = async (req, res) => {
-    try {
-        const { fileId } = req.params;
-        const file = await File.findById(fileId);
+  try {
+    const { fileId } = req.params;
+    const file = await File.findById(fileId);
 
-        if (!file) return res.status(404).json({ message: "File not found" });
+    if (!file) return res.status(404).json({ message: "File not found" });
 
-        let versions = [];
-        let isTruncated = true;
-        let keyMarker;
-        let versionIdMarker;
+    let versions = [];
+    let isTruncated = true;
+    let keyMarker;
+    let versionIdMarker;
 
-        while (isTruncated) {
-            const command = new ListObjectVersionsCommand({
-                Bucket: process.env.BUCKET_NAME,
-                Prefix: file.s3Key,
-                KeyMarker: keyMarker,
-                VersionIdMarker: versionIdMarker
-            });
+    while (isTruncated) {
+      const command = new ListObjectVersionsCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Prefix: file.s3Key,
+        KeyMarker: keyMarker,
+        VersionIdMarker: versionIdMarker
+      });
 
-            const data = await s3.send(command);
+      const data = await s3.send(command);
 
-            if (data.Versions) versions.push(...data.Versions);
+      if (data.Versions) versions.push(...data.Versions);
 
-            isTruncated = data.IsTruncated;
-            keyMarker = data.NextKeyMarker;
-            versionIdMarker = data.NextVersionIdMarker;
-        }
-
-        return res.status(200).json({ versions });
-
-    } catch (error) {
-        console.error("Show Versions Error:", error);
-        return res.status(500).json({ message: "Internal Server Error" });
+      isTruncated = data.IsTruncated;
+      keyMarker = data.NextKeyMarker;
+      versionIdMarker = data.NextVersionIdMarker;
     }
+
+    return res.status(200).json({ versions });
+
+  } catch (error) {
+    console.error("Show Versions Error:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
 export {
