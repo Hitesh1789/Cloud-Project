@@ -11,6 +11,6 @@ router.post("/uploadFile", upload.single("file"), uploadFile);
 router.delete("/deleteFile/:fileId",deleteFile);
 router.get("/showVersions/:fileId",showVersions);
 router.get("/downloadFile/:fileId",downloadFile);
-router.get("/getFiles",getFiles);
+router.get("/getFiles",getFiles); 
 
 export default router;
