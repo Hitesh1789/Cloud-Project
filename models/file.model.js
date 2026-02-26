@@ -6,22 +6,12 @@ const fileSchema = new Schema({
         required: true,
         trim: true
     },
-    fileUrl: {
-        type: String,
-        required: true
-    },
     s3Key: {
         type: String,
         required: true
     },
-    fileSize: {
-        type: Number
-    },
-    fileType: {
-        type: String
-    },
     versionId: {
-        type: String   //For   S3 versioning
+        type: String  
     },
     uploadedBy: {
         type: Schema.Types.ObjectId,

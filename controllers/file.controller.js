@@ -8,7 +8,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { File } from "../models/file.model.js";
-import { v4 as uuidv4 } from "uuid";
 
 const uploadFile = async (req, res) => {
     try {
@@ -21,7 +20,7 @@ const uploadFile = async (req, res) => {
         const file = req.file;
 
         // Generate unique S3 key
-        const uniqueKey = `${req.user._id}/${uuidv4()}-${file.originalname}`;
+        const uniqueKey = `${req.user._id}/${file.originalname}`;
 
         const fileStream = fs.createReadStream(file.path);
 
@@ -43,11 +42,8 @@ const uploadFile = async (req, res) => {
         const newFile = await File.create({
             fileName: file.originalname,
             s3Key: uniqueKey,
-            fileUrl: `https://${process.env.BUCKET_NAME}.s3.amazonaws.com/${uniqueKey}`,
-            fileSize: file.size,
-            fileType: file.mimetype,
             versionId: uploadResult.VersionId || null,
-            uploadedBy: req.user._id
+            uploadedBy: req.user?._id
         });
 
         return res.status(201).json({
@@ -100,7 +96,6 @@ const deleteFile = async (req, res) => {
     }
 };
 
-
 const downloadFile = async (req, res) => {
     try {
         const { fileId } = req.params;
@@ -116,7 +111,7 @@ const downloadFile = async (req, res) => {
         }
 
         const command = new GetObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
+            Bucket: process.env.BUCKET_NAME,
             Key: file.s3Key
         });
 
@@ -135,40 +130,31 @@ const downloadFile = async (req, res) => {
 };
 
 const showVersions = async (req, res) => {
-  try {
-    const { fileId } = req.params;
-    const file = await File.findById(fileId);
+    try {
+        const { fileId } = req.params;
+        const file = await File.findById(fileId);
+        
+        if (!file) {
+            return res.status(404).json({ message: "File not found" });
+        }
 
-    if (!file) return res.status(404).json({ message: "File not found" });
+        if (file.uploadedBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+        
+        const command = new ListObjectVersionsCommand({
+            Bucket: process.env.BUCKET_NAME,
+            Prefix: file.s3Key
+        });
 
-    let versions = [];
-    let isTruncated = true;
-    let keyMarker;
-    let versionIdMarker;
+        const data = await s3.send(command);
 
-    while (isTruncated) {
-      const command = new ListObjectVersionsCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Prefix: file.s3Key,
-        KeyMarker: keyMarker,
-        VersionIdMarker: versionIdMarker
-      });
-
-      const data = await s3.send(command);
-
-      if (data.Versions) versions.push(...data.Versions);
-
-      isTruncated = data.IsTruncated;
-      keyMarker = data.NextKeyMarker;
-      versionIdMarker = data.NextVersionIdMarker;
+        return res.status(200).json({ versions: data.Versions || [] });
     }
-
-    return res.status(200).json({ versions });
-
-  } catch (error) {
-    console.error("Show Versions Error:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+    catch (error) {
+        console.error("Show Versions Error:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 export {
