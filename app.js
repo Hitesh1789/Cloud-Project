@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 
 const app = express();
 
-//  __dirname fix for ES modules
+// __dirname fix for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -30,8 +30,8 @@ import userRouter from "./routes/user.routes.js";
 app.use("/api/files", fileRouter);
 app.use("/api/users", userRouter);
 
-// React SPA fallback route (IMPORTANT)
-app.get((req, res) => {
+// ✅ IMPORTANT: React SPA fallback (MUST BE LAST)
+app.get("/{*any}", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
