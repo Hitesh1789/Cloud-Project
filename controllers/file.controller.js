@@ -159,9 +159,25 @@ const showVersions = async (req, res) => {
     }
 };
 
+const getFiles = async (req, res) => {
+  try {
+
+    const files = await File
+      .find({ uploadedBy: req.user._id })
+      .select("-uploadedBy -s3Key");
+
+    return res.status(200).json({ files });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 export {
     uploadFile,
     deleteFile,
     downloadFile,
-    showVersions
+    showVersions,
+    getFiles
 }
