@@ -150,9 +150,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
     }
     catch (error) {
-        return res.status(500).json({
-            message:"Something went wrong while generating access and refresh token"
-        })
+        console.log(error)
     }
 }
 
