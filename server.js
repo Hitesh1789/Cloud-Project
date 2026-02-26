@@ -1,24 +1,19 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import fileRoutes from "./routes/fileRoutes.route.js";
-import cookieParser from "cookie-parser"
+// Aim: Develop a Secure identity access management with back up and replicate options: Cloud apps open solution (IaaS, PaaS, and also in SaaS) Steps: Ø Choose cloud storage (bucket) Ø Develop a web interface Ø Implement a file upload/download with replicate and backup options Ø It should also have different versions i.e. V1, V2……. Ø User Authentication Ø Testing and Deployment
 
+import connectDB from "./config/connectDB.config.js";
+import {app} from "./app.js";
+import dotenv from "dotenv";
 dotenv.config({ 
     path:'./.env'
 })
+ 
+connectDB()
+.then(()=>{
+    app.listen(process.env.PORT,()=>{
+        console.log(`Server is running at port: ${process.env.PORT}`);
+    })
+})
+.catch((error)=>{
+    console.log("MongoDB connection failed ! ",error);
+})
 
-const app = express();
-
-app.use(cors({
-    origin:process.env.CORS_ORIGIN
-}
-));
-app.use(express.json());
-app.use(cookieParser())
-
-app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
-});
-
-app.use("/api/files", fileRoutes);
