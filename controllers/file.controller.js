@@ -78,7 +78,8 @@ const deleteFile = async (req, res) => {
         // Delete from S3
         const command = new DeleteObjectCommand({
             Bucket: process.env.BUCKET_NAME,
-            Key: file.s3Key
+            Key: file.s3Key,
+            VersionId:file.versionId
         });
 
         await s3.send(command);
